@@ -71,14 +71,19 @@ export default function Dashboard() {
   const budgetUsedPct = totalBudget > 0 ? (totalExpense / totalBudget) * 100 : 0
 
   const trendData = useMemo(() => {
-    if (!data) return []
-    return (data.monthlyTrends || []).map((t) => ({
-      monthNum: new Date(`${monthLabel(t.month)} 1, 2000`).getMonth() + 1,
-      month: monthLabel(t.month).slice(0, 3),
+  if (!data) return [];
+
+  return (data.monthlyTrends || []).map((t) => {
+    const label = monthLabel(t.month) || "";
+
+    return {
+      monthNum: new Date(`${label} 1, 2000`).getMonth() + 1,
+      month: label.slice(0, 3),
       income: Number(t.income),
       expense: Number(t.expense),
-    }))
-  }, [data])
+    };
+  });
+}, [data]);
 
   const deltas = useMemo(() => {
     const current = trendData.find((t) => t.monthNum === month)
