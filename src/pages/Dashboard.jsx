@@ -44,7 +44,7 @@ export default function Dashboard() {
     setLoading(true)
     setError('')
     getDashboard(month, year)
-      .then((res) => {!cancelled && setData(res); console.log(res)})
+      .then((res) => {!cancelled && setData(res);})
       .catch((err) => !cancelled && setError(err.message || 'Could not load dashboard'))
       .finally(() => !cancelled && setLoading(false))
     return () => { cancelled = true }
@@ -96,16 +96,27 @@ export default function Dashboard() {
     }
   }, [trendData, month])
 
-  const budgetStatus = useMemo(() => {
-    const expenseMap = Object.fromEntries(categoryExpenses.map((e) => [e.category, Number(e.amount)]))
-    return categoryBudgets.map((b) => {
-      const spent = expenseMap[b.category] || 0
-      const limit = Number(b.monthlyLimit)
-      const pct = limit > 0 ? Math.min(100, (spent / limit) * 100) : 0
-      return { category: b.category, spent, limit, pct }
-    })
-  }, [categoryBudgets, categoryExpenses])
+const budgetStatus = useMemo(() => {
+  const expenseMap = Object.fromEntries(
+    categoryExpenses.map((e) => [e.category, Number(e.amount)])
+  );
 
+  return categoryBudgets
+    .map((b) => {
+      const spent = expenseMap[b.category] || 0;
+      const limit = Number(b.monthlyLimit);
+      const pct = limit > 0 ? Math.min(100, (spent / limit) * 100) : 0;
+
+      return {
+        category: b.category,
+        spent,
+        limit,
+        pct,
+      };
+    })
+    .sort((a, b) => b.pct - a.pct)   // Highest usage first
+    .slice(0, 5);                    // Show only top 5
+}, [categoryBudgets, categoryExpenses]);
   const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1)
   const yearOptions = Array.from({ length: 6 }, (_, i) => now.getFullYear() - 3 + i)
 

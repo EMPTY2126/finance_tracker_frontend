@@ -32,6 +32,7 @@ export default function Budgets() {
     try {
       const res = await budgetApi.getBudgets(filters)
       setPageData(res)
+      console.log(res)
     } catch (err) {
       setError(err.message || 'Could not load budgets')
     } finally {
