@@ -28,7 +28,7 @@ export default function TransactionForm({ initial, onSubmit, onCancel, submitLab
         description: form.description.trim() || null,
       })
     } catch (err) {
-      setError(err.message || 'Could not save transaction')
+      setError('Could not save transaction')
     } finally {
       setSaving(false)
     }
@@ -84,6 +84,7 @@ export default function TransactionForm({ initial, onSubmit, onCancel, submitLab
           <input
             className={inputClass}
             value={form.description}
+            maxLength={200}
             onChange={(e) => update('description', e.target.value)}
             placeholder="Notes about this transaction"
           />
