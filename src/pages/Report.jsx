@@ -1,81 +1,95 @@
-import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { Download, Plus } from 'lucide-react'
-import * as txApi from '../api/transactions'
-import TransactionForm from '../components/TransactionForm.jsx'
-import TransactionTableExport from '../components/TransactionTableExport.jsx'
-import TransactionFilterBar from '../components/TransactionFilterBar.jsx'
-import Pagination from '../components/Pagination.jsx'
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Download, Plus } from "lucide-react";
+import * as txApi from "../api/transactions";
+import TransactionForm from "../components/TransactionForm.jsx";
+import TransactionTableExport from "../components/TransactionTableExport.jsx";
+import TransactionFilterBar from "../components/TransactionFilterBar.jsx";
+import Pagination from "../components/Pagination.jsx";
 import { downloadExcel } from "../api/reports";
 
 export default function Transactions() {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const [filters, setFilters] = useState({ page: 0, size: 10 })
-  const [pageData, setPageData] = useState({ content: [], totalPages: 0 })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [presetType, setPresetType] = useState(null)
-
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [filters, setFilters] = useState({ page: 0, size: 10 });
+  const [pageData, setPageData] = useState({ content: [], totalPages: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [presetType, setPresetType] = useState(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (location.state?.openAdd) {
-      setPresetType(location.state.presetType || null)
-      navigate(location.pathname, { replace: true, state: {} })
+      setPresetType(location.state.presetType || null);
+      navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state])
+  }, [location.state]);
 
   async function load() {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
     try {
-      const res = await txApi.getTransactions(filters)
-      setPageData(res)
+      const res = await txApi.getTransactions(filters);
+      setPageData(res);
     } catch (err) {
-      setError(err.message || 'Could not load transactions')
+      setError(err.message || "Could not load transactions");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    load()
-  }, [filters])
+    load();
+  }, [filters]);
 
   async function downloadReport() {
+    if (downloading) return;
+
+    setDownloading(true);
+
     try {
-        const blob = await downloadExcel(filters);
+      const blob = await downloadExcel(filters);
 
-        const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-        const link = document.createElement("a");
+      const link = document.createElement("a");
 
-        link.href = url;
-        link.download = "Transactions.xlsx";
+      link.href = url;
+      link.download = "Transactions.xlsx";
 
-        document.body.appendChild(link);
-        link.click();
+      document.body.appendChild(link);
+      link.click();
 
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (err) {
-        console.error(err);
+      console.error(err);
+    } finally {
+      setDownloading(false);
     }
-}
+  }
 
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-ink">Transactions</h1>
-          <p className="mt-1 text-sm text-muted">Every entry, filterable and editable.</p>
+          <p className="mt-1 text-sm text-muted">
+            Every entry, filterable and editable.
+          </p>
         </div>
         <button
-          onClick={() => { downloadReport(filters) }}
-          className="flex items-center gap-1.5 rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-bright"
+          onClick={downloadReport}
+          disabled={downloading}
+          className={`flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition
+    ${
+      downloading
+        ? "cursor-not-allowed bg-gray-500"
+        : "bg-black hover:bg-brand-bright"
+    }`}
         >
-          <Download className="h-4 w-4" /> {'Download'}
+          <Download className="h-4 w-4" />
+          {downloading ? "Downloading..." : "Download"}
         </button>
       </div>
 
@@ -84,7 +98,9 @@ export default function Transactions() {
       </div>
 
       {error && (
-        <p className="mb-4 rounded-xl border border-rose/30 bg-rose-soft px-4 py-3 text-sm text-rose">{error}</p>
+        <p className="mb-4 rounded-xl border border-rose/30 bg-rose-soft px-4 py-3 text-sm text-rose">
+          {error}
+        </p>
       )}
 
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
@@ -92,9 +108,7 @@ export default function Transactions() {
           <p className="py-10 text-center text-sm text-muted">Loading…</p>
         ) : (
           <>
-            <TransactionTableExport
-              transactions={pageData.content || []}
-            />
+            <TransactionTableExport transactions={pageData.content || []} />
             <div className="mt-4">
               <Pagination
                 page={filters.page}
@@ -106,5 +120,5 @@ export default function Transactions() {
         )}
       </div>
     </div>
-  )
+  );
 }
