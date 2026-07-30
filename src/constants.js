@@ -47,7 +47,6 @@ export function formatCurrency(value) {
 }
 
 export function categoryLabel(cat) {
-  console.log(cat)
   if (typeof cat !== "string") return "";
   return cat.charAt(0) + cat.slice(1).toLowerCase().replace(/_/g, " ");
 }
